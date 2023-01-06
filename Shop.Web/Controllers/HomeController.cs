@@ -13,10 +13,12 @@ namespace Shop.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IProductService _productService;
-        public HomeController(ILogger<HomeController> logger, IProductService productService)
+        private readonly ICartService _cartService;
+        public HomeController(ILogger<HomeController> logger, IProductService productService, ICartService cartService)
         {
             _logger = logger;
             _productService = productService;
+            _cartService = cartService;
         }
 
         public async Task<IActionResult> Index()
@@ -41,6 +43,44 @@ namespace Shop.Web.Controllers
             return View(product);
         }
 
+        [HttpPost]
+        [Authorize]
+        [ActionName("Details")]
+
+        public async Task<IActionResult> DetailsPost(ProductDto productDto)
+        {
+            CartDto cartDto = new CartDto()
+            {
+                CartHeader = new CartHeaderDto()
+                {
+                    UserId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault()?.Value
+                }
+            };
+            CartDetailsDto cartDetail = new CartDetailsDto()
+            {
+                Count = productDto.Count,
+                ProductId = productDto.ProductId,
+            };
+            var resp = await _productService.GetProductByIdAsync<ResponseDto>(productDto.ProductId,"");
+            if (resp!=null && resp.IsSucces)
+            {
+                cartDetail.Product = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(resp.Result));
+            }
+            List<CartDetailsDto> cartDetailsDtos = new List<CartDetailsDto>
+            {
+                cartDetail
+            };
+            cartDto.CartDetails = cartDetailsDtos;
+
+            var accesToken = await HttpContext.GetTokenAsync("access_token");
+            var addTOCartResp = await _cartService.AddToCartAsync<ResponseDto>(cartDto, accesToken);
+            if (addTOCartResp != null && addTOCartResp.IsSucces)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+ 
+            return View(productDto);
+        }
         [Authorize]
         public async Task<IActionResult> Login()
         {

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Shop.Web.Services;
 using Shop.Web.Services.IServices;
 
@@ -13,8 +14,11 @@ namespace Shop.Web
             builder.Services.AddControllersWithViews();
 
             builder.Services.AddHttpClient<IProductService, ProducrService>();
+            builder.Services.AddHttpClient<ICartService, CartService>();
             SD.ProductAPIBase = builder.Configuration["ServiceUrls:ProductApi"];
+            SD.CartAPIBase = builder.Configuration["ServiceUrls:CartApi"];
             builder.Services.AddScoped<IProductService, ProducrService>();
+            builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = "Cookies";
@@ -28,7 +32,8 @@ namespace Shop.Web
                     options.ClientId = "web";
                     options.ClientSecret = "secret";
                     options.ResponseType = "code";
-
+                    options.ClaimActions.MapJsonKey("role", "role", "role");
+                    options.ClaimActions.MapJsonKey("sub", "sub", "sub");
                     options.TokenValidationParameters.NameClaimType = "name";
                     options.TokenValidationParameters.RoleClaimType = "role";
                     options.Scope.Add("web");
