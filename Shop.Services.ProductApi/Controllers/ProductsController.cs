@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Shop.Services.ProductApi.Models.Dto;
 using Shop.Services.ProductApi.Repository;
 
@@ -20,7 +21,7 @@ namespace Shop.Services.ProductApi.Controllers
         }
 
         // GET: api/<ValuesController>
-        [HttpGet]
+            [HttpGet]
         public async Task<object> Get()
         {
             try
@@ -59,6 +60,7 @@ namespace Shop.Services.ProductApi.Controllers
 
         // POST api/<ValuesController>
         [HttpPost]
+        [Authorize]
         public async Task<object> Post([FromBody] ProductDto productDto)
         {
             try
@@ -78,6 +80,7 @@ namespace Shop.Services.ProductApi.Controllers
 
         // PUT api/<ValuesController>/5
         [HttpPut]
+        [Authorize]
         public async Task<object>  Put( [FromBody] ProductDto productDto)
         {
             try
@@ -97,6 +100,7 @@ namespace Shop.Services.ProductApi.Controllers
 
         // DELETE api/<ValuesController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles ="Admin")]
         public async Task<object> Delete(int id)
         {
             try

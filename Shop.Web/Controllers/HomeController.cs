@@ -1,5 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Shop.Web.Models;
+using Shop.Web.Models.Dto;
+using Shop.Web.Services.IServices;
 using System.Diagnostics;
 
 namespace Shop.Web.Controllers
@@ -7,15 +12,44 @@ namespace Shop.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        private readonly IProductService _productService;
+        public HomeController(ILogger<HomeController> logger, IProductService productService)
         {
             _logger = logger;
+            _productService = productService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            List<ProductDto> list = new();
+            var response = await _productService.GetAllProductsAsync<ResponseDto>("");
+            if (response != null&&response.IsSucces)
+            {
+                list = JsonConvert.DeserializeObject<List<ProductDto>>(Convert.ToString(response.Result));  
+            }
+            return View(list);
+        }
+        [Authorize]
+        public async Task<IActionResult> Details(int productId)
+        {
+            ProductDto product = new();
+            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId,"");
+            if (response != null && response.IsSucces)
+            {
+                product = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(response.Result));
+            }
+            return View(product);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Login()
+        {
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            return RedirectToAction(nameof(Index));
+        }
+        public IActionResult Logout()
+        {
+            return SignOut("Cookies","oidc");
         }
 
         public IActionResult Privacy()

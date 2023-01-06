@@ -1,8 +1,10 @@
+using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shop.Services.Identity.DbContexts;
 using Shop.Services.Identity.Initializer;
 using Shop.Services.Identity.Models;
+using Shop.Services.Identity.Services;
 
 namespace Shop.Services.Identity
 {
@@ -32,6 +34,7 @@ namespace Shop.Services.Identity
             .AddAspNetIdentity<ApplicationUser>()
             .AddDeveloperSigningCredential();
             builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+            builder.Services.AddScoped<IProfileService,ProfileService>();
                 var app = builder.Build();
 
             // Configure the HTTP request pipeline.

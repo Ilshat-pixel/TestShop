@@ -15,6 +15,25 @@ namespace Shop.Web
             builder.Services.AddHttpClient<IProductService, ProducrService>();
             SD.ProductAPIBase = builder.Configuration["ServiceUrls:ProductApi"];
             builder.Services.AddScoped<IProductService, ProducrService>();
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Cookies";
+                options.DefaultChallengeScheme = "oidc";
+            })
+                .AddCookie("Cookies", c => c.ExpireTimeSpan = TimeSpan.FromMinutes(10))
+                .AddOpenIdConnect("oidc", options =>
+                {
+                    options.Authority = builder.Configuration["ServiceUrls:IdentityApi"];
+                    options.GetClaimsFromUserInfoEndpoint = true;
+                    options.ClientId = "web";
+                    options.ClientSecret = "secret";
+                    options.ResponseType = "code";
+
+                    options.TokenValidationParameters.NameClaimType = "name";
+                    options.TokenValidationParameters.RoleClaimType = "role";
+                    options.Scope.Add("web");
+                    options.SaveTokens = true;
+                });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -30,8 +49,8 @@ namespace Shop.Web
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
